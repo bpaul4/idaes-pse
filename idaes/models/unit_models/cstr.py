@@ -37,6 +37,12 @@ from idaes.core.scaling import CustomScalerBase
 __author__ = "Andrew Lee, Vibhav Dabadghao, Brandon Paul"
 
 class CSTRScalerCustom(CustomScalerBase):
+    DEFAULT_SCALING_FACTORS = {
+        # "QuantityName: (reference units, scaling factor)
+        "deltaP": 1e-5,
+        "volume": 1e3,
+    }
+    
     def variable_scaling_routine(
         self, model, overwrite: bool = False, submodel_scalers: dict = None
     ):
@@ -46,6 +52,16 @@ class CSTRScalerCustom(CustomScalerBase):
             submodel_scalers=submodel_scalers,
             overwrite=overwrite
         )
+
+        # Volume
+        if hasattr(model.control_volume, "volume"):
+            for t in model.flowsheet().time:
+                self.scale_variable_by_default(
+                    model.control_volume.volume[t], overwrite=overwrite
+                )
+                self.set_variable_scaling_factor(
+                    model.control_volume.volume[t], 1e3
+                )
 
     def constraint_scaling_routine(
         self, model, overwrite: bool = False, submodel_scalers: dict = None
@@ -70,12 +86,21 @@ class CSTRScalerCustom(CustomScalerBase):
             submodel_scalers=submodel_scalers,
             overwrite=overwrite
         )
+
         if hasattr(model, "cstr_performance_eqn"):
             for idx in model.cstr_performance_eqn:
                 self.scale_constraint_by_nominal_value(
-                    model.rate_reaction_constraint[idx],
+                    model.cstr_performance_eqn[idx],
                     overwrite=overwrite
                 )
+
+        # scale remaining unit level constraints
+        for c in model.component_data_objects(Constraint, descend_into=False):
+            self.scale_constraint_by_nominal_value(
+                c,
+                overwrite=overwrite,
+            )
+
 class CSTRScaler(CustomScalerBase):
     """
     Default modular scaler for CSTR unit model.
@@ -89,9 +114,10 @@ class CSTRScaler(CustomScalerBase):
     to 0.1 bar. All constraints are scaled using the inverse maximum scheme.
     """
 
-    UNIT_SCALING_FACTORS = {
+    DEFAULT_SCALING_FACTORS = {
         # "QuantityName: (reference units, scaling factor)
-        "Pressure Change": (units.bar, 10),
+        "deltaP": 1e-5,
+        "volume": 1e3,
     }
 
     def variable_scaling_routine(
@@ -144,7 +170,7 @@ class CSTRScaler(CustomScalerBase):
         # Pressure drop
         if hasattr(model.control_volume, "deltaP"):
             for t in model.flowsheet().time:
-                self.scale_variable_by_units(
+                self.scale_variable_by_default(
                     model.control_volume.deltaP[t], overwrite=overwrite
                 )
 
@@ -171,11 +197,11 @@ class CSTRScaler(CustomScalerBase):
         # Volume
         if hasattr(model.control_volume, "volume"):
             for t in model.flowsheet().time:
-                self.scale_variable_by_units(
+                self.scale_variable_by_default(
                     model.control_volume.volume[t], overwrite=overwrite
                 )
                 self.set_variable_scaling_factor(
-                    model.control_volume.volume[t], 1.5e-3
+                    model.control_volume.volume[t], 1e3
                 )
 
     def constraint_scaling_routine(

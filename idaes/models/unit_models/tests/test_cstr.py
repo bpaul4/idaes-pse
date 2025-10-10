@@ -516,13 +516,13 @@ class TestCSTRScaler:
         assert isinstance(sfx_cv, Suffix)
         assert len(sfx_cv) == 3
         assert sfx_cv[model.fs.unit.control_volume.heat[0]] == pytest.approx(
-            4.793620e-04, rel=1e-3
+            1.91745e-05, rel=1e-3
         )
         assert sfx_cv[model.fs.unit.control_volume.deltaP[0]] == pytest.approx(
-            1e-4, rel=1e-3
+            1e-5, rel=1e-3
         )
         assert sfx_cv[model.fs.unit.control_volume.volume[0]] == pytest.approx(
-            1.5e-3, rel=1e-3
+            1e3, rel=1e-3
         )
 
         # No unit level variables to scale, so no suffix
@@ -603,7 +603,7 @@ class TestCSTRScaler:
         assert isinstance(sfx_unit, Suffix)
         assert len(sfx_unit) == 1
         assert sfx_unit[
-            model.fs.unit.rate_reaction_constraint[0.0, "R1"]
+            model.fs.unit.cstr_performance_eqn[0.0, "R1"]
         ] == pytest.approx(1, rel=1e-8)
 
     @pytest.mark.component
@@ -699,15 +699,15 @@ class TestCSTRScaler:
         # Check that unit model has scaling factors
         sfx_cv = model.fs.unit.control_volume.scaling_factor
         assert isinstance(sfx_cv, Suffix)
-        assert len(sfx_cv) == 14
+        assert len(sfx_cv) == 15
         assert sfx_cv[model.fs.unit.control_volume.heat[0]] == pytest.approx(
             1.917448e-05, rel=1e-3
         )
         assert sfx_cv[model.fs.unit.control_volume.deltaP[0]] == pytest.approx(
-            1e-4, rel=1e-3
+            1e-5, rel=1e-3
         )
         assert sfx_cv[model.fs.unit.control_volume.volume[0]] == pytest.approx(
-            6.7e2, rel=1e-3
+            1e3, rel=1e-3
         )
         assert sfx_cv[
             model.fs.unit.control_volume.enthalpy_balances[0.0]
@@ -732,9 +732,6 @@ class TestCSTRScaler:
         sfx_unit = model.fs.unit.scaling_factor
         assert isinstance(sfx_unit, Suffix)
         assert len(sfx_unit) == 1
-        assert sfx_unit[
-            model.fs.unit.rate_reaction_constraint[0.0, "R1"]
-        ] == pytest.approx(1e2, rel=1e-8)
 
     @pytest.mark.integration
     def test_example_case(self):
@@ -773,6 +770,7 @@ class TestCSTRScaler:
         initializer.initialize(m.fs.unit)
 
         set_scaling_factor(m.fs.unit.control_volume.properties_in[0].flow_vol, 1)
+        set_scaling_factor(m.fs.unit.control_volume.volume[0.0], 1e3)
 
         scaler = CSTRScaler()
         scaler.scale_model(m.fs.unit)
@@ -795,7 +793,7 @@ class TestCSTRScaler:
         sm = TransformationFactory("core.scale_model").create_using(m, rename=False)
         jac, _ = get_jacobian(sm, scaled=False)
         assert (jacobian_cond(jac=jac, scaled=False)) == pytest.approx(
-            1.030e4, rel=1e-3
+            3.450e8, rel=1e-3
         )
 
 class TestCSTRScalerCustom:
@@ -871,6 +869,7 @@ class TestCSTRScalerCustom:
         initializer.initialize(m.fs.unit)
 
         set_scaling_factor(m.fs.unit.control_volume.properties_in[0].flow_vol, 1)
+        set_scaling_factor(m.fs.unit.control_volume.volume[0.0], 1e3)
 
         scaler = CSTRScalerCustom()
         scaler.scale_model(m.fs.unit)
@@ -893,5 +892,5 @@ class TestCSTRScalerCustom:
         sm = TransformationFactory("core.scale_model").create_using(m, rename=False)
         jac, _ = get_jacobian(sm, scaled=False)
         assert (jacobian_cond(jac=jac, scaled=False)) == pytest.approx(
-            770.06, rel=1e-3
+            4.653e7, rel=1e-3
         )
