@@ -19,13 +19,12 @@ import pytest
 
 from pyomo.environ import (
     assert_optimal_termination,
-     ComponentMap,
-     ConcreteModel,
-     Suffix,
-     TransformationFactory,
-     units,
-     exp,
-     value,
+    ComponentMap,
+    ConcreteModel,
+    Suffix,
+    TransformationFactory,
+    exp,
+    value,
 )
 
 from idaes.core import (
@@ -34,11 +33,7 @@ from idaes.core import (
     EnergyBalanceType,
     MomentumBalanceType,
 )
-from idaes.models.unit_models.cstr import (
-    CSTR,
-    CSTRScaler,
-    CSTRScalerCustom
-)
+from idaes.models.unit_models.cstr import CSTR, CSTRScaler, CSTRScalerCustom
 from idaes.models.properties.examples.saponification_thermo import (
     SaponificationParameterBlock,
 )
@@ -559,9 +554,7 @@ class TestCSTRScaler:
         # Check that sub-models have suffixes - we will assume they are right at this point
         sfx_in = model.fs.unit.control_volume.properties_in[0].scaling_factor
         assert isinstance(sfx_in, Suffix)
-        assert (
-            len(sfx_in) == 0
-        )
+        assert len(sfx_in) == 0
 
         sfx_out = model.fs.unit.control_volume.properties_out[0].scaling_factor
         assert isinstance(sfx_out, Suffix)
@@ -602,9 +595,9 @@ class TestCSTRScaler:
         sfx_unit = model.fs.unit.scaling_factor
         assert isinstance(sfx_unit, Suffix)
         assert len(sfx_unit) == 1
-        assert sfx_unit[
-            model.fs.unit.cstr_performance_eqn[0.0, "R1"]
-        ] == pytest.approx(1, rel=1e-8)
+        assert sfx_unit[model.fs.unit.cstr_performance_eqn[0.0, "R1"]] == pytest.approx(
+            1, rel=1e-8
+        )
 
     @pytest.mark.component
     def test_constraint_scaling_routine_submodel_scaler(self, model):
@@ -761,7 +754,7 @@ class TestCSTRScaler:
 
         m.fs.unit.inlet.temperature.fix(303.15)
         m.fs.unit.inlet.pressure.fix(101325.0)
-    
+
         m.fs.unit.volume.fix(1.5e-03)
         m.fs.unit.heat_duty.fix(0)
         m.fs.unit.deltaP.fix(0)
@@ -795,6 +788,7 @@ class TestCSTRScaler:
         assert (jacobian_cond(jac=jac, scaled=False)) == pytest.approx(
             3.450e8, rel=1e-3
         )
+
 
 class TestCSTRScalerCustom:
     @pytest.fixture
@@ -831,7 +825,7 @@ class TestCSTRScalerCustom:
         m.fs.unit.deltaP.fix(0)
 
         return m
-    
+
     @pytest.mark.integration
     def test_example_case(self):
         m = ConcreteModel()

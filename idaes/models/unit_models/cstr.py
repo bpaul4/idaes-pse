@@ -16,7 +16,7 @@ Standard IDAES CSTR model.
 
 # Import Pyomo libraries
 from pyomo.common.config import ConfigBlock, ConfigValue, In, Bool
-from pyomo.environ import Reference, exp, units, Constraint
+from pyomo.environ import Reference, Constraint
 
 # Import IDAES cores
 from idaes.core import (
@@ -36,13 +36,14 @@ from idaes.core.scaling import CustomScalerBase
 
 __author__ = "Andrew Lee, Vibhav Dabadghao, Brandon Paul"
 
+
 class CSTRScalerCustom(CustomScalerBase):
     DEFAULT_SCALING_FACTORS = {
         # "QuantityName: (reference units, scaling factor)
         "deltaP": 1e-5,
         "volume": 1e3,
     }
-    
+
     def variable_scaling_routine(
         self, model, overwrite: bool = False, submodel_scalers: dict = None
     ):
@@ -50,7 +51,7 @@ class CSTRScalerCustom(CustomScalerBase):
             model.control_volume,
             method="variable_scaling_routine",
             submodel_scalers=submodel_scalers,
-            overwrite=overwrite
+            overwrite=overwrite,
         )
 
         # Volume
@@ -59,9 +60,7 @@ class CSTRScalerCustom(CustomScalerBase):
                 self.scale_variable_by_default(
                     model.control_volume.volume[t], overwrite=overwrite
                 )
-                self.set_variable_scaling_factor(
-                    model.control_volume.volume[t], 1e3
-                )
+                self.set_variable_scaling_factor(model.control_volume.volume[t], 1e3)
 
     def constraint_scaling_routine(
         self, model, overwrite: bool = False, submodel_scalers: dict = None
@@ -84,14 +83,13 @@ class CSTRScalerCustom(CustomScalerBase):
             model.control_volume,
             method="constraint_scaling_routine",
             submodel_scalers=submodel_scalers,
-            overwrite=overwrite
+            overwrite=overwrite,
         )
 
         if hasattr(model, "cstr_performance_eqn"):
             for idx in model.cstr_performance_eqn:
                 self.scale_constraint_by_nominal_value(
-                    model.cstr_performance_eqn[idx],
-                    overwrite=overwrite
+                    model.cstr_performance_eqn[idx], overwrite=overwrite
                 )
 
         # scale remaining unit level constraints
@@ -100,6 +98,7 @@ class CSTRScalerCustom(CustomScalerBase):
                 c,
                 overwrite=overwrite,
             )
+
 
 class CSTRScaler(CustomScalerBase):
     """
@@ -200,9 +199,7 @@ class CSTRScaler(CustomScalerBase):
                 self.scale_variable_by_default(
                     model.control_volume.volume[t], overwrite=overwrite
                 )
-                self.set_variable_scaling_factor(
-                    model.control_volume.volume[t], 1e3
-                )
+                self.set_variable_scaling_factor(model.control_volume.volume[t], 1e3)
 
     def constraint_scaling_routine(
         self, model, overwrite: bool = False, submodel_scalers: dict = None
